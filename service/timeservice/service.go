@@ -11,8 +11,7 @@ type Service struct {
 }
 
 func New(modelName string) Service {
-	loadTransformation := true
-	model, err := leaves.LGEnsembleFromFile(modelName, loadTransformation)
+	model, err := leaves.LGEnsembleFromFile(modelName, true)
 	if err != nil {
 		panic(err)
 	}
