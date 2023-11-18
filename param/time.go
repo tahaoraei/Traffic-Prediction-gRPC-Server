@@ -1,16 +1,16 @@
 package param
 
 type ETARequest struct {
-	CurrentETA  int
-	StraightETA int
-	Distance    int
-	Sx          int
-	Sy          int
-	Dx          int
-	Dy          int
-	Time        int
+	CurrentETA  int32
+	StraightETA int32
+	Distance    int32
+	Sx          int32
+	Sy          int32
+	Dx          int32
+	Dy          int32
+	Time        int32
 }
 
 type ETAResponse struct {
-	ETA int
+	ETA int32
 }

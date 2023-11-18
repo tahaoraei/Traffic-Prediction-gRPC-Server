@@ -1,1 +1,27 @@
-package protobuf
+syntax = "proto3";
+
+package protobuf;
+option go_package = "contract/goproto/time";
+
+message TravelRequest {
+  int32 CurrentETA = 1;
+  int32 StraightETA = 2;
+  int32 Distance = 3;
+  int32 Sx = 4;
+  int32 Sy = 5;
+  int32 Dx = 6;
+  int32 Dy = 7;
+  int32 Time = 8;
+}
+
+message TravelResponse {
+  int32 ETA = 1;
+}
+
+service GetETA {
+  rpc GetETA(TravelRequest) returns (TravelResponse);
+}
+
+
+
+

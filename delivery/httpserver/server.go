@@ -31,6 +31,7 @@ func (s Server) Serve() {
 	s.Router.Use(middleware.Logger())
 
 	s.Router.GET("/health/live", s.health)
+	s.Router.GET("/health/ready", s.health)
 
 	// Start server
 	address := fmt.Sprintf(":%d", s.config.Port)
