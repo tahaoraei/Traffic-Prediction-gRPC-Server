@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
+	"timeMachine/pkg/logger"
 	"timeMachine/service/timeservice"
 )
 
@@ -27,6 +28,7 @@ func New(config Config, timeSvc timeservice.Service) Server {
 }
 
 func (s Server) Serve() {
+	log := logger.Get()
 	s.Router.Use(middleware.Recover())
 	s.Router.Use(middleware.Logger())
 
@@ -35,9 +37,9 @@ func (s Server) Serve() {
 
 	// Start server
 	address := fmt.Sprintf(":%d", s.config.Port)
-	fmt.Printf("start echo server on %s\n", address)
+	log.Info().Str("server", "start server").Msgf("start echo server on %s\n", address)
 	if err := s.Router.Start(address); err != nil {
-		fmt.Println("router start error", err)
+		log.Fatal().Msgf("router start error", err)
 	}
 }
 

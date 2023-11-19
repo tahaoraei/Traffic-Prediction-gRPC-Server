@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	client := grpcClinet.New(":8086")
+	client := grpcClinet.New(":9090")
 
 	req := param.ETARequest{
 		CurrentETA:  1667.0,

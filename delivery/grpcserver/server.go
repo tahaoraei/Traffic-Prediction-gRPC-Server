@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 	"timeMachine/contract/goproto/time"
 	"timeMachine/param"
+	"timeMachine/pkg/logger"
 	"timeMachine/service/timeservice"
 )
 
@@ -39,9 +39,11 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 }
 
 func (s Server) Start() {
-	address := fmt.Sprintf(":%d", 8086)
+	log := logger.Get()
+	address := fmt.Sprintf(":%d", 9090)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
+		log.Fatal().Msgf("grpc listener problem: ", err)
 		panic(err)
 	}
 
@@ -50,8 +52,8 @@ func (s Server) Start() {
 
 	time.RegisterGetETAServer(grpcServer, &timeServer)
 
-	log.Println("ETA grpc server starting on", address)
+	log.Info().Msgf("ETA grpc server starting on", address)
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatal("couldn't server presence grpc server")
+		log.Fatal().Msgf("couldn't server presence grpc server")
 	}
 }
