@@ -12,14 +12,13 @@ func main() {
 	client := grpcClinet.New(":9090")
 
 	req := param.ETARequest{
-		CurrentETA:  1667.0,
-		StraightETA: 1601.0,
-		Distance:    16088.0,
-		Sx:          5712845.0,
-		Sy:          4262054.0,
-		Dx:          5724172.0,
-		Dy:          4263342.0,
-		Time:        879.0,
+		CurrentETA: 1667.0,
+		Distance:   16088.0,
+		Sx:         5712845.0,
+		Sy:         4262054.0,
+		Dx:         5724172.0,
+		Dy:         4263342.0,
+		Time:       879.0,
 	}
 
 	var wg sync.WaitGroup

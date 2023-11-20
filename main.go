@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	cfg := httpserver.Config{Port: 8080}
-	timeSvc := timeservice.New("timemachine-lightgbm-20231118.txt")
+	cfg := httpserver.Config{Port: 7182}
+	timeSvc := timeservice.New("timemachine-lightgbm-20231120.txt")
 
 	grpc := grpcserver.New(&timeSvc)
 	go func() {

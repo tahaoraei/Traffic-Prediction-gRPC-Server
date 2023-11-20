@@ -25,7 +25,7 @@ func New(modelName string) Service {
 }
 
 func (s *Service) GetETA(req param.ETARequest) param.ETAResponse {
-	feature := []float64{float64(req.Distance), float64(req.CurrentETA), float64(req.StraightETA), float64(req.Sx), float64(req.Sy), float64(req.Dx), float64(req.Dy), float64(req.Time)}
+	feature := []float64{float64(req.Distance), float64(req.CurrentETA), float64(req.Sx), float64(req.Sy), float64(req.Dx), float64(req.Dy), float64(req.Time), float64(1400)}
 	eta := s.model.PredictSingle(feature, 0)
 	fmt.Println("eta from GetETA service", eta)
 	return param.ETAResponse{ETA: int32(eta)}

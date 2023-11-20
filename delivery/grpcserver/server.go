@@ -25,14 +25,13 @@ func New(svc *timeservice.Service) Server {
 
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
 	eta := s.svc.GetETA(param.ETARequest{
-		CurrentETA:  req.CurrentETA,
-		StraightETA: req.StraightETA,
-		Distance:    req.Distance,
-		Sx:          req.Sx,
-		Sy:          req.Sy,
-		Dx:          req.Dx,
-		Dy:          req.Dy,
-		Time:        req.Time,
+		CurrentETA: req.CurrentETA,
+		Distance:   req.Distance,
+		Sx:         req.Sx,
+		Sy:         req.Sy,
+		Dx:         req.Dx,
+		Dy:         req.Dy,
+		Time:       req.Time,
 	})
 	resp := time.TravelResponse{ETA: eta.ETA}
 	return &resp, nil
