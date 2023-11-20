@@ -31,7 +31,7 @@ func New(modelName string, repo Repository) Service {
 	return Service{repo: repo, modelName: modelName, model: model}
 }
 
-func (s *Service) setTrafficLength() error {
+func (s *Service) SetTrafficLength() error {
 	l, e := s.repo.GetTrafficLength()
 	if e != nil {
 		log.Warn().Msgf("error in getting traffic length: %s", e.Error())

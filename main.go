@@ -2,9 +2,11 @@ package main
 
 import (
 	"os"
+	"sync"
 	"timeMachine/delivery/grpcserver"
 	"timeMachine/delivery/httpserver"
 	"timeMachine/repository/postgres"
+	"timeMachine/scheduler"
 	"timeMachine/service/timeservice"
 )
 
@@ -24,11 +26,22 @@ func main() {
 	repo := postgres.New(cfg_db)
 	timeSvc := timeservice.New("timemachine-lightgbm-20231120.txt", repo)
 
+	var wg sync.WaitGroup
+	done := make(chan bool)
+	go func() {
+		cron := scheduler.New(&timeSvc)
+		wg.Add(1)
+		cron.Start(done, &wg)
+	}()
+
 	grpc := grpcserver.New(&timeSvc)
 	go func() {
 		grpc.Start()
 	}()
 
-	server := httpserver.New(cfg_httpserver, timeSvc)
+	server := httpserver.New(cfg_httpserver)
 	server.Serve()
+
+	done <- true
+	wg.Wait()
 }

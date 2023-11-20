@@ -6,7 +6,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"timeMachine/pkg/logger"
-	"timeMachine/service/timeservice"
 )
 
 type Config struct {
@@ -14,16 +13,14 @@ type Config struct {
 }
 
 type Server struct {
-	config  Config
-	timeSvc timeservice.Service
-	Router  *echo.Echo
+	config Config
+	Router *echo.Echo
 }
 
-func New(config Config, timeSvc timeservice.Service) Server {
+func New(config Config) Server {
 	return Server{
-		config:  config,
-		timeSvc: timeSvc,
-		Router:  echo.New(),
+		config: config,
+		Router: echo.New(),
 	}
 }
 
