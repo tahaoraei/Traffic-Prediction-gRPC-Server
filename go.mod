@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/dmitryikh/leaves v0.0.0-20230708180554-25d19a787328
 	github.com/labstack/echo/v4 v4.11.3
+	github.com/lib/pq v1.10.9
 	github.com/rs/zerolog v1.31.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
