@@ -51,6 +51,7 @@ func (db *DB) GetTrafficLength() (int32, error) {
 		log.Warn().Msgf("get traffic length from db err is: ", err)
 		return length, err
 	}
+	log.Info().Msgf("Traffic length for %s is %d", nowTehran, length)
 	return length, nil
 }
 
