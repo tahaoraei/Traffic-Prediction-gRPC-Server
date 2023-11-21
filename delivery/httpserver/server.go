@@ -5,8 +5,10 @@ import (
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"timeMachine/pkg/logger"
+	"timeMachine/pkg/metric"
 )
 
 type Config struct {
@@ -28,9 +30,9 @@ func New(config Config) Server {
 func (s Server) Serve() {
 	log := logger.Get()
 
-	//if err := prometheus.Register(metric.ResponseHistogram); err != nil {
-	//	log.Fatal().Msgf("can't register prometheus metric: ", err)
-	//}
+	if err := prometheus.Register(metric.ResponseHistogram); err != nil {
+		log.Fatal().Msgf("can't register prometheus metric: ", err)
+	}
 
 	s.Router.Use(middleware.Recover())
 	s.Router.Use(middleware.Logger())
