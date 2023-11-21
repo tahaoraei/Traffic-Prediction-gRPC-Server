@@ -39,7 +39,7 @@ func (s Server) Serve() {
 
 	s.Router.GET("/health/live", s.health)
 	s.Router.GET("/health/ready", s.health)
-	s.Router.GET("/actuator/metric", echoprometheus.NewHandler())
+	s.Router.GET("/actuator/prometheus", echoprometheus.NewHandler())
 
 	// Start server
 	address := fmt.Sprintf(":%d", s.config.Port)
