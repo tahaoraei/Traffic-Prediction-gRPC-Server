@@ -3,6 +3,7 @@ package grpcserver
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"net"
 	"timeMachine/contract/goproto/time"
@@ -24,6 +25,7 @@ func New(svc *timeservice.Service) Server {
 }
 
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
+	log.Info().Msgf("taha req %+v", req)
 	eta := s.svc.GetETA(param.ETARequest{
 		CurrentETA: req.CurrentETA,
 		Distance:   req.Distance,
