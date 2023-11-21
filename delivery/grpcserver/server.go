@@ -38,8 +38,8 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Time:       req.Time,
 	})
 
-	responseDuration := t.Since(startTime).Seconds()
-	metric.ResponseHistogram.Observe(responseDuration)
+	responseDuration := t.Since(startTime).Milliseconds()
+	metric.ResponseHistogram.Observe(float64(responseDuration))
 	resp := time.TravelResponse{ETA: eta.ETA}
 	return &resp, nil
 }
