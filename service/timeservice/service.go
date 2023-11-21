@@ -44,5 +44,6 @@ func (s *Service) SetTrafficLength() error {
 func (s *Service) GetETA(req param.ETARequest) param.ETAResponse {
 	feature := []float64{float64(req.Distance), float64(req.CurrentETA), float64(req.Sx), float64(req.Sy), float64(req.Dx), float64(req.Dy), float64(req.Time), float64(s.trafficLength)}
 	eta := s.model.PredictSingle(feature, 0)
+	log.Info().Msgf("%+v traffic length %d ETA is: %d", req, s.trafficLength, eta)
 	return param.ETAResponse{ETA: int32(eta)}
 }
