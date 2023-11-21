@@ -2,14 +2,11 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"timeMachine/pkg/logger"
-	prometh "timeMachine/pkg/prometheus"
-
-	"github.com/labstack/echo-contrib/echoprometheus"
 )
 
 type Config struct {
@@ -32,8 +29,6 @@ func (s Server) Serve() {
 	log := logger.Get()
 	s.Router.Use(middleware.Recover())
 	s.Router.Use(middleware.Logger())
-
-	prometheus.MustRegister(prometh.ResponseHistogram)
 
 	s.Router.GET("/health/live", s.health)
 	s.Router.GET("/health/ready", s.health)

@@ -1,16 +1,19 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"os"
 	"sync"
 	"timeMachine/delivery/grpcserver"
 	"timeMachine/delivery/httpserver"
+	prometh "timeMachine/pkg/prometheus"
 	"timeMachine/repository/postgres"
 	"timeMachine/scheduler"
 	"timeMachine/service/timeservice"
 )
 
 func main() {
+	prometheus.MustRegister(prometh.ResponseHistogram)
 	cfg_httpserver := httpserver.Config{
 		Port: 7182,
 	}
