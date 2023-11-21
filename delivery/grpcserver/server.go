@@ -9,7 +9,7 @@ import (
 	"timeMachine/contract/goproto/time"
 	"timeMachine/param"
 	"timeMachine/pkg/logger"
-	prometh "timeMachine/pkg/prometheus"
+	"timeMachine/pkg/metric"
 	"timeMachine/service/timeservice"
 )
 
@@ -39,7 +39,7 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	})
 
 	responseDuration := t.Since(startTime).Seconds()
-	prometh.ResponseHistogram.Observe(responseDuration)
+	metric.ResponseHistogram.Observe(responseDuration)
 	resp := time.TravelResponse{ETA: eta.ETA}
 	return &resp, nil
 }
