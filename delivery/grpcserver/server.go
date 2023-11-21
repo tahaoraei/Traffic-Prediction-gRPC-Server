@@ -3,12 +3,13 @@ package grpcserver
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"net"
+	t "time"
 	"timeMachine/contract/goproto/time"
 	"timeMachine/param"
 	"timeMachine/pkg/logger"
+	prometh "timeMachine/pkg/prometheus"
 	"timeMachine/service/timeservice"
 )
 
@@ -25,7 +26,8 @@ func New(svc *timeservice.Service) Server {
 }
 
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
-	log.Info().Msgf("taha req %+v", req)
+	startTime := t.Now()
+
 	eta := s.svc.GetETA(param.ETARequest{
 		CurrentETA: req.CurrentETA,
 		Distance:   req.Distance,
@@ -35,6 +37,9 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Dy:         req.Dy,
 		Time:       req.Time,
 	})
+
+	responseDuration := t.Since(startTime).Seconds()
+	prometh.ResponseHistogram.Observe(responseDuration)
 	resp := time.TravelResponse{ETA: eta.ETA}
 	return &resp, nil
 }
