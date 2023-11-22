@@ -25,7 +25,7 @@ func main() {
 	}
 
 	repo := postgres.New(cfg_db)
-	mlModel := ml.New("timemachine-lightgbm-tehran-evening-20231122.txt")
+	mlModel := ml.New("timemachine-lightgbm-l1-tehran-evening-20231122.txt")
 	timeSvc := timeservice.New(repo, mlModel)
 
 	var wg sync.WaitGroup
