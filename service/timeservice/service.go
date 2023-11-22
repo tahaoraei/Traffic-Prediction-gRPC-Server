@@ -1,8 +1,6 @@
 package timeservice
 
 import (
-	"fmt"
-	"github.com/dmitryikh/leaves"
 	"github.com/rs/zerolog/log"
 	"timeMachine/param"
 )
@@ -11,24 +9,18 @@ type Repository interface {
 	GetTrafficLength() (int32, error)
 }
 
-type Service struct {
-	repo          Repository
-	trafficLength int32
-	modelName     string
-	model         *leaves.Ensemble
+type ML interface {
+	GetETAFromML(req *param.ETARequest) *param.ETAResponse
 }
 
-func New(modelName string, repo Repository) Service {
-	model, err := leaves.LGEnsembleFromFile(modelName, true)
-	if err != nil {
-		panic(err)
-	}
-	if model == nil {
-		fmt.Println("model is nil")
-	} else {
-		fmt.Println(model.Name())
-	}
-	return Service{repo: repo, modelName: modelName, model: model}
+type Service struct {
+	repo          Repository
+	ml            ML
+	trafficLength int32
+}
+
+func New(repo Repository, ml ML) Service {
+	return Service{repo: repo, ml: ml}
 }
 
 func (s *Service) SetTrafficLength() error {
@@ -41,9 +33,13 @@ func (s *Service) SetTrafficLength() error {
 	return nil
 }
 
-func (s *Service) GetETA(req param.ETARequest) param.ETAResponse {
-	feature := []float64{float64(req.Distance), float64(req.Sx), float64(req.Sy), float64(req.Dx), float64(req.Dy), float64(s.trafficLength), float64(req.CurrentETA), float64(req.Time)}
-	eta := s.model.PredictSingle(feature, 0)
-	log.Info().Msgf("%+v traffic length %d ETA is: %d", req, s.trafficLength, eta)
-	return param.ETAResponse{ETA: int32(eta)}
+func (s *Service) GetETA(req *param.ETARequest) *param.ETAResponse {
+	req.TrafficLength = s.trafficLength
+	eta := s.ml.GetETAFromML(req)
+	if eta == nil {
+		log.Info().Msgf("%v can't predict eta for this request or eta<500", req)
+	} else {
+		log.Info().Msgf("%v %d", req, eta)
+	}
+	return eta
 }

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"timeMachine/delivery/grpcserver"
 	"timeMachine/delivery/httpserver"
+	"timeMachine/ml"
 	"timeMachine/repository/postgres"
 	"timeMachine/scheduler"
 	"timeMachine/service/timeservice"
@@ -24,7 +25,8 @@ func main() {
 	}
 
 	repo := postgres.New(cfg_db)
-	timeSvc := timeservice.New("timemachine-lightgbm-20231120.txt", repo)
+	mlModel := ml.New("timemachine-lightgbm-tehran-evening-20231122.txt")
+	timeSvc := timeservice.New(repo, mlModel)
 
 	var wg sync.WaitGroup
 	done := make(chan bool)

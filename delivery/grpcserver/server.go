@@ -3,6 +3,7 @@ package grpcserver
 import (
 	"context"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"net"
 	t "time"
@@ -28,7 +29,7 @@ func New(svc *timeservice.Service) Server {
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
 	startTime := t.Now()
 
-	eta := s.svc.GetETA(param.ETARequest{
+	request := param.ETARequest{
 		CurrentETA: req.CurrentETA,
 		Distance:   req.Distance,
 		Sx:         req.Sx,
@@ -36,7 +37,13 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Dx:         req.Dx,
 		Dy:         req.Dy,
 		Time:       req.Time,
-	})
+	}
+
+	eta := s.svc.GetETA(&request)
+	if eta == nil {
+		log.Warn().Msgf("cant predict eta and ml didn't response")
+		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("cant predict eta")
+	}
 
 	responseDuration := t.Since(startTime).Milliseconds()
 	metric.ResponseHistogram.Observe(float64(responseDuration))
