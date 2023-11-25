@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	GetTrafficLength() (int32, error)
+	GetTrafficLength(zone int8) (int32, error)
 }
 
 type ML interface {
@@ -17,14 +17,15 @@ type Service struct {
 	repo          Repository
 	ml            ML
 	trafficLength int32
+	zone          int8
 }
 
-func New(repo Repository, ml ML) Service {
-	return Service{repo: repo, ml: ml}
+func New(repo Repository, ml ML, zone int8) Service {
+	return Service{repo: repo, ml: ml, zone: zone}
 }
 
-func (s *Service) SetTrafficLength() error {
-	l, e := s.repo.GetTrafficLength()
+func (s *Service) SetTrafficLength(zone int8) error {
+	l, e := s.repo.GetTrafficLength(zone)
 	if e != nil {
 		log.Warn().Msgf("error in getting traffic length: %s", e.Error())
 		return e

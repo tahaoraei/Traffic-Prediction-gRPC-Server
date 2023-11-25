@@ -25,15 +25,17 @@ func main() {
 	}
 
 	repo := postgres.New(cfg_db)
-	mlModel := ml.New("timemachine-lightgbm-l1-tehran-evening-20231122.txt")
-	timeSvc := timeservice.New(repo, mlModel)
+	tehranML := ml.New("timemachine-lightgbm-l1-tehran-evening-20231122.txt", .4, .6)
+	tehranSvc := timeservice.New(repo, tehranML, 1)
+	mashhadML := ml.New("timemachine-lightgbm-l1-mashhad-20231122.txt", .3, .7)
+	mashhadSvc := timeservice.New(repo, mashhadML, 2)
 
 	var wg sync.WaitGroup
 	done := make(chan bool)
 	go func() {
-		cron := scheduler.New(&timeSvc)
+		cronTehran := scheduler.New(&tehranSvc, &mashhadSvc)
 		wg.Add(1)
-		cron.Start(done, &wg)
+		cronTehran.Start(done, &wg)
 	}()
 
 	go func() {
@@ -41,7 +43,7 @@ func main() {
 		server.Serve()
 	}()
 
-	grpc := grpcserver.New(&timeSvc)
+	grpc := grpcserver.New(&tehranSvc, &mashhadSvc)
 	grpc.Start()
 
 	done <- true

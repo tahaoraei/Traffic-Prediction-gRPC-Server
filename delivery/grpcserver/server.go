@@ -16,13 +16,15 @@ import (
 
 type Server struct {
 	time.UnimplementedGetETAServer
-	svc *timeservice.Service
+	tehranSvc  *timeservice.Service
+	mashhadSvc *timeservice.Service
 }
 
-func New(svc *timeservice.Service) Server {
+func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server {
 	return Server{
 		UnimplementedGetETAServer: time.UnimplementedGetETAServer{},
-		svc:                       svc,
+		tehranSvc:                 tehranSvc,
+		mashhadSvc:                mashhadSvc,
 	}
 }
 
@@ -39,14 +41,22 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Time:       req.Time,
 	}
 
-	eta := s.svc.GetETA(&request)
+	var eta *param.ETAResponse
+	if req.Sx > 5683551 && req.Sy > 4216113 && req.Dx < 5774664 && req.Dy < 4277874 {
+		eta = s.tehranSvc.GetETA(&request)
+	} else if req.Sx > 6583521 && req.Sy > 4309213 && req.Dx < 6656388 && req.Dy < 4383510 {
+		eta = s.mashhadSvc.GetETA(&request)
+	} else {
+		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("location is not in tehran or mashhad")
+	}
+
+	responseDuration := t.Since(startTime).Milliseconds()
+	metric.ResponseHistogram.Observe(float64(responseDuration))
 	if eta == nil {
 		log.Warn().Msgf("cant predict eta and ml didn't response")
 		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("cant predict eta")
 	}
 
-	responseDuration := t.Since(startTime).Milliseconds()
-	metric.ResponseHistogram.Observe(float64(responseDuration))
 	resp := time.TravelResponse{ETA: eta.ETA}
 	return &resp, nil
 }
@@ -60,7 +70,7 @@ func (s Server) Start() {
 		panic(err)
 	}
 
-	timeServer := Server{svc: s.svc}
+	timeServer := Server{tehranSvc: s.tehranSvc, mashhadSvc: s.mashhadSvc}
 	grpcServer := grpc.NewServer()
 
 	time.RegisterGetETAServer(grpcServer, &timeServer)

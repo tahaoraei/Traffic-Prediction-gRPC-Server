@@ -44,10 +44,10 @@ func New(config Config) *DB {
 	}
 }
 
-func (db *DB) GetTrafficLength() (int32, error) {
+func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	var length int32
 	var nowTehran = nowTehran()
-	if err := db.db.QueryRow(`select length::int from traffic.traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=1 order by date_time desc limit 1;`, nowTehran).Scan(&length); err != nil {
+	if err := db.db.QueryRow(`select length::int from traffic.traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
 		log.Warn().Msgf("get traffic length from db err is: ", err)
 		return length, err
 	}

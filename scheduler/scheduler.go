@@ -8,21 +8,24 @@ import (
 )
 
 type Scheduler struct {
-	sch *gocron.Scheduler
-	svc *timeservice.Service
+	sch        *gocron.Scheduler
+	tehranSvc  *timeservice.Service
+	mashhadSvc *timeservice.Service
 }
 
-func New(svc *timeservice.Service) Scheduler {
+func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Scheduler {
 	return Scheduler{
-		sch: gocron.NewScheduler(time.UTC),
-		svc: svc,
+		sch:        gocron.NewScheduler(time.UTC),
+		tehranSvc:  tehranSvc,
+		mashhadSvc: mashhadSvc,
 	}
 }
 
 func (s Scheduler) Start(done <-chan bool, wg *sync.WaitGroup) {
 	wg.Done()
 
-	s.sch.Every(30).Second().Do(s.svc.SetTrafficLength())
+	s.sch.Every(30).Second().Do(s.tehranSvc.SetTrafficLength(1))
+	s.sch.Every(30).Second().Do(s.mashhadSvc.SetTrafficLength(2))
 	s.sch.StartAsync()
 
 	<-done
