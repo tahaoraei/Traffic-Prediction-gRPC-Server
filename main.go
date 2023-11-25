@@ -25,9 +25,9 @@ func main() {
 	}
 
 	repo := postgres.New(cfg_db)
-	tehranML := ml.New("timemachine-lightgbm-l1-tehran-evening-20231122.txt", .4, .6)
+	tehranML := ml.New("tehran-20231125.txt", .4, .6)
 	tehranSvc := timeservice.New(repo, tehranML, 1)
-	mashhadML := ml.New("timemachine-lightgbm-l1-mashhad-20231122.txt", .3, .7)
+	mashhadML := ml.New("mashhad-20231125.txt", .3, .7)
 	mashhadSvc := timeservice.New(repo, mashhadML, 2)
 
 	var wg sync.WaitGroup
