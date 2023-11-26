@@ -14,6 +14,17 @@ import (
 	"timeMachine/service/timeservice"
 )
 
+const (
+	minXTehran  = 5683551
+	minYTehran  = 4216113
+	maxXTehran  = 5774664
+	maxYTehran  = 4277874
+	minXMashhad = 6583521
+	minYMashhad = 4309213
+	maxXMashhad = 6656388
+	maxYMashhad = 4383510
+)
+
 type Server struct {
 	time.UnimplementedGetETAServer
 	tehranSvc  *timeservice.Service
@@ -42,9 +53,11 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	}
 
 	var eta *param.ETAResponse
-	if req.Sx > 5683551 && req.Sy > 4216113 && req.Dx < 5774664 && req.Dy < 4277874 {
+	if req.Sx > minXTehran && req.Sy > minYTehran && req.Sx < maxXTehran && req.Sy < maxYTehran &&
+		req.Dx > minXTehran && req.Dy > minYTehran && req.Dx < maxXTehran && req.Dy < maxYTehran {
 		eta = s.tehranSvc.GetETA(&request)
-	} else if req.Sx > 6583521 && req.Sy > 4309213 && req.Dx < 6656388 && req.Dy < 4383510 {
+	} else if req.Sx > minXMashhad && req.Sy > minYMashhad && req.Sx < maxXMashhad && req.Sy < maxYMashhad &&
+		req.Dx > minXMashhad && req.Dy > minYMashhad && req.Dx < maxXMashhad && req.Dy < maxYMashhad {
 		eta = s.mashhadSvc.GetETA(&request)
 	} else {
 		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("location is not in tehran or mashhad")
