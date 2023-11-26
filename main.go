@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"sync"
 	"timeMachine/delivery/grpcserver"
@@ -25,9 +26,17 @@ func main() {
 	}
 
 	repo := postgres.New(cfg_db)
-	tehranML := ml.New("tehran-20231125.txt", .4, .6)
+
+	tehranML, err := ml.New("tehran-20231125.txt", .4, .6)
+	if err != nil {
+		log.Fatalf("faild to load tehran ml model: %v", err)
+	}
 	tehranSvc := timeservice.New(repo, tehranML, 1)
-	mashhadML := ml.New("mashhad-20231125.txt", .3, .7)
+
+	mashhadML, err := ml.New("mashhad-20231125.txt", .3, .7)
+	if err != nil {
+		log.Fatalf("faild to load mashhad ml model: %v", err)
+	}
 	mashhadSvc := timeservice.New(repo, mashhadML, 2)
 
 	var wg sync.WaitGroup
