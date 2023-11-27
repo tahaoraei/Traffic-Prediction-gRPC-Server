@@ -45,22 +45,22 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	request := param.ETARequest{
 		CurrentETA: req.CurrentETA,
 		Distance:   req.Distance,
-		Sx:         req.Sx,
-		Sy:         req.Sy,
-		Dx:         req.Dx,
-		Dy:         req.Dy,
+		Sx:         req.SourceX,
+		Sy:         req.SourceY,
+		Dx:         req.DestinationX,
+		Dy:         req.DestinationY,
 		Time:       req.Time,
 	}
 
 	var eta *param.ETAResponse
-	if req.Sx > minXTehran && req.Sy > minYTehran && req.Sx < maxXTehran && req.Sy < maxYTehran &&
-		req.Dx > minXTehran && req.Dy > minYTehran && req.Dx < maxXTehran && req.Dy < maxYTehran {
+	if req.SourceX > minXTehran && req.SourceY > minYTehran && req.SourceX < maxXTehran && req.SourceY < maxYTehran &&
+		req.DestinationX > minXTehran && req.DestinationY > minYTehran && req.DestinationX < maxXTehran && req.DestinationY < maxYTehran {
 		eta = s.tehranSvc.GetETA(&request)
-	} else if req.Sx > minXMashhad && req.Sy > minYMashhad && req.Sx < maxXMashhad && req.Sy < maxYMashhad &&
-		req.Dx > minXMashhad && req.Dy > minYMashhad && req.Dx < maxXMashhad && req.Dy < maxYMashhad {
+	} else if req.SourceX > minXMashhad && req.SourceY > minYMashhad && req.SourceX < maxXMashhad && req.SourceY < maxYMashhad &&
+		req.DestinationX > minXMashhad && req.DestinationY > minYMashhad && req.DestinationX < maxXMashhad && req.DestinationY < maxYMashhad {
 		eta = s.mashhadSvc.GetETA(&request)
 	} else {
-		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("location is not in tehran or mashhad")
+		return &time.TravelResponse{ETA: req.CurrentETA}, nil
 	}
 
 	responseDuration := t.Since(startTime).Milliseconds()
