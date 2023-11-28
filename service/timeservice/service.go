@@ -39,8 +39,6 @@ func (s *Service) GetETA(req *param.ETARequest) *param.ETAResponse {
 	eta := s.ml.GetETAFromML(req)
 	if eta == nil {
 		log.Info().Msgf("%v can't predict eta for this request or eta<500", req)
-	} else {
-		log.Info().Msgf("%v %d", req, eta)
 	}
 	return eta
 }

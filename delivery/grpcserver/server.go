@@ -12,6 +12,8 @@ import (
 	"timeMachine/pkg/logger"
 	"timeMachine/pkg/metric"
 	"timeMachine/service/timeservice"
+
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 )
 
 const (
@@ -31,6 +33,7 @@ type Server struct {
 	mashhadSvc *timeservice.Service
 }
 
+// options
 func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server {
 	return Server{
 		UnimplementedGetETAServer: time.UnimplementedGetETAServer{},
@@ -39,6 +42,7 @@ func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server
 	}
 }
 
+// pointer
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
 	startTime := t.Now()
 
@@ -64,7 +68,7 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	}
 
 	responseDuration := t.Since(startTime).Milliseconds()
-	metric.ResponseHistogram.Observe(float64(responseDuration))
+	metric.ResponseHistogram.WithLabelValues("GetETA").Observe(float64(responseDuration))
 	if eta == nil {
 		log.Warn().Msgf("cant predict eta and ml didn't response")
 		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("cant predict eta")
@@ -84,7 +88,12 @@ func (s Server) Start() {
 	}
 
 	timeServer := Server{tehranSvc: s.tehranSvc, mashhadSvc: s.mashhadSvc}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	)
+
+	grpc_prometheus.Register(grpcServer)
 
 	time.RegisterGetETAServer(grpcServer, &timeServer)
 
