@@ -2,6 +2,7 @@ package timeservice
 
 import (
 	"github.com/rs/zerolog/log"
+	"sync"
 	"timeMachine/param"
 )
 
@@ -36,9 +37,23 @@ func (s *Service) SetTrafficLength(zone int8) error {
 
 func (s *Service) GetETA(req *param.ETARequest) *param.ETAResponse {
 	req.TrafficLength = s.trafficLength
-	eta := s.ml.GetETAFromML(req)
+
+	var eta *param.ETAResponse
+	var wg sync.WaitGroup
+
+	processRequest := func() {
+		defer wg.Done()
+		eta = s.ml.GetETAFromML(req)
+	}
+
+	wg.Add(1)
+	go processRequest()
+
+	wg.Wait()
+
 	if eta == nil {
 		log.Info().Msgf("%v can't predict eta for this request or eta<500", req)
 	}
+
 	return eta
 }

@@ -3,7 +3,6 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"os"
 	"time"
 	_ "time/tzdata"
@@ -11,6 +10,8 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+var log = logger.Get()
 
 type Config struct {
 	Host   string
@@ -26,7 +27,6 @@ type DB struct {
 }
 
 func New(config Config) *DB {
-	log := logger.Get()
 	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, os.Getenv("SECRETS_DBUSER"), os.Getenv("SECRETS_DBPASS"), config.DBName))
 	if err != nil {

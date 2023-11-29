@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	// TODO: main should be write in 3 line :)
 	cfg_httpserver := httpserver.Config{
 		Port: 7182,
 	}

@@ -34,6 +34,7 @@ func (ml *ML) GetETAFromML(req *param.ETARequest) *param.ETAResponse {
 		float64(req.Time),
 	}
 	eta := ml.model.PredictSingle(features, 0)
+	// TODO: move this logic in business layer
 	if eta < 500 {
 		return nil
 	}

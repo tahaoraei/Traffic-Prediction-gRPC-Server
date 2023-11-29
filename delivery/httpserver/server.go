@@ -11,6 +11,8 @@ import (
 	"timeMachine/pkg/metric"
 )
 
+var log = logger.Get()
+
 type Config struct {
 	Port int
 }
@@ -28,8 +30,6 @@ func New(config Config) Server {
 }
 
 func (s Server) Serve() {
-	log := logger.Get()
-
 	if err := prometheus.Register(metric.ResponseHistogram); err != nil {
 		log.Fatal().Msgf("can't register prometheus metric: ", err)
 	}

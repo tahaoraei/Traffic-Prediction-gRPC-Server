@@ -3,7 +3,6 @@ package grpcserver
 import (
 	"context"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"net"
 	t "time"
@@ -27,13 +26,15 @@ const (
 	maxYMashhad = 4383510
 )
 
+var log = logger.Get()
+
 type Server struct {
 	time.UnimplementedGetETAServer
 	tehranSvc  *timeservice.Service
 	mashhadSvc *timeservice.Service
 }
 
-// options
+// TODO: change to option pattern
 func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server {
 	return Server{
 		UnimplementedGetETAServer: time.UnimplementedGetETAServer{},
@@ -42,9 +43,10 @@ func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server
 	}
 }
 
-// pointer
+// TODO: change Server to pointer
 func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
 	startTime := t.Now()
+	defer metric.ResponseHistogram.WithLabelValues("GetETA").Observe(float64(t.Since(startTime).Milliseconds()))
 
 	request := param.ETARequest{
 		CurrentETA: req.CurrentETA,
@@ -56,6 +58,7 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Time:       req.Time,
 	}
 
+	// TODO: move this logic to business layer
 	var eta *param.ETAResponse
 	if req.SourceX > minXTehran && req.SourceY > minYTehran && req.SourceX < maxXTehran && req.SourceY < maxYTehran &&
 		req.DestinationX > minXTehran && req.DestinationY > minYTehran && req.DestinationX < maxXTehran && req.DestinationY < maxYTehran {
@@ -67,8 +70,6 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		return &time.TravelResponse{ETA: req.CurrentETA}, nil
 	}
 
-	responseDuration := t.Since(startTime).Milliseconds()
-	metric.ResponseHistogram.WithLabelValues("GetETA").Observe(float64(responseDuration))
 	if eta == nil {
 		log.Warn().Msgf("cant predict eta and ml didn't response")
 		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("cant predict eta")
@@ -79,11 +80,11 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 }
 
 func (s Server) Start() {
-	log := logger.Get()
 	address := fmt.Sprintf(":%d", 9090)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatal().Msgf("grpc listener problem: ", err)
+		// TODO: return error here not panic
 		panic(err)
 	}
 
