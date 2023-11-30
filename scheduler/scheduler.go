@@ -4,7 +4,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"sync"
 	"time"
-	"timeMachine/service/timeservice"
+	"traffic-prediction-grpc-server/service/timeservice"
 )
 
 type Scheduler struct {
