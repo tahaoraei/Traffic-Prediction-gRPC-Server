@@ -3,7 +3,7 @@ package ml
 import (
 	"fmt"
 	"github.com/dmitryikh/leaves"
-	"timeMachine/param"
+	"traffic-prediction-grpc-server/param"
 )
 
 type ML struct {
