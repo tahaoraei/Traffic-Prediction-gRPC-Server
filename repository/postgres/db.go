@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 	_ "time/tzdata"
-	"timeMachine/pkg/logger"
+	"traffic-prediction-grpc-server/pkg/logger"
 
 	_ "github.com/lib/pq"
 )
@@ -28,7 +28,7 @@ type DB struct {
 
 func New(config Config) *DB {
 	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, os.Getenv("SECRETS_DBUSER"), os.Getenv("SECRETS_DBPASS"), config.DBName))
+		config.Host, config.Port, os.Getenv("DBUSER"), os.Getenv("DBPASS"), config.DBName))
 	if err != nil {
 		log.Fatal().Msgf("can't connect to db %s", err)
 		panic(err)
@@ -47,7 +47,7 @@ func New(config Config) *DB {
 func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	var length int32
 	var nowTehran = nowTehran()
-	if err := db.db.QueryRow(`select length::int from traffic.traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
+	if err := db.db.QueryRow(`select length::int from traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
 		log.Warn().Msgf("get traffic length from db err is: ", err)
 		return length, err
 	}
