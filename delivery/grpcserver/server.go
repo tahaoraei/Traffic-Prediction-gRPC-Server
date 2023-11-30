@@ -6,11 +6,11 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	t "time"
-	"timeMachine/contract/goproto/time"
-	"timeMachine/param"
-	"timeMachine/pkg/logger"
-	"timeMachine/pkg/metric"
-	"timeMachine/service/timeservice"
+	"traffic-prediction-grpc-server/contract/goproto/time"
+	"traffic-prediction-grpc-server/param"
+	"traffic-prediction-grpc-server/pkg/logger"
+	"traffic-prediction-grpc-server/pkg/metric"
+	"traffic-prediction-grpc-server/service/timeservice"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 )
