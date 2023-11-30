@@ -3,7 +3,7 @@ package timeservice
 import (
 	"github.com/rs/zerolog/log"
 	"sync"
-	"timeMachine/param"
+	"traffic-prediction-grpc-server/param"
 )
 
 type Repository interface {
