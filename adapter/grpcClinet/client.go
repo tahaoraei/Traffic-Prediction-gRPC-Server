@@ -3,8 +3,8 @@ package grpcClinet
 import (
 	"context"
 	"google.golang.org/grpc"
-	"timeMachine/contract/goproto/time"
-	"timeMachine/param"
+	"traffic-prediction-grpc-server/contract/goproto/time"
+	"traffic-prediction-grpc-server/param"
 )
 
 type Client struct {
@@ -27,13 +27,13 @@ func (c Client) GetNewETA(ctx context.Context, request param.ETARequest) (param.
 	client := time.NewGetETAClient(conn)
 
 	travelRequest := time.TravelRequest{
-		CurrentETA: request.CurrentETA,
-		Distance:   request.Distance,
-		Sx:         request.Sx,
-		Sy:         request.Sy,
-		Dx:         request.Dx,
-		Dy:         request.Dy,
-		Time:       request.Time,
+		CurrentETA:   request.CurrentETA,
+		Distance:     request.Distance,
+		SourceX:      request.Sx,
+		SourceY:      request.Sy,
+		DestinationX: request.Dx,
+		DestinationY: request.Dy,
+		Time:         request.Time,
 	}
 
 	resp, err := client.GetETA(ctx, &travelRequest)

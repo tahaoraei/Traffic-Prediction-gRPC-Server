@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"timeMachine/adapter/grpcClinet"
-	"timeMachine/param"
+	"traffic-prediction-grpc-server/adapter/grpcClinet"
+	"traffic-prediction-grpc-server/param"
 )
 
 func main() {
