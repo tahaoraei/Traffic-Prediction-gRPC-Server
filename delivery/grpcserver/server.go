@@ -3,6 +3,7 @@ package grpcserver
 import (
 	"context"
 	"fmt"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"net"
 	t "time"
@@ -11,8 +12,6 @@ import (
 	"timeMachine/pkg/logger"
 	"timeMachine/pkg/metric"
 	"timeMachine/service/timeservice"
-
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
 )
 
 const (

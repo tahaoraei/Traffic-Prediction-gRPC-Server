@@ -5,6 +5,7 @@ go 1.21.0
 require (
 	github.com/dmitryikh/leaves v0.0.0-20230708180554-25d19a787328
 	github.com/go-co-op/gocron v1.36.0
+	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo/v4 v4.11.3
 	github.com/lib/pq v1.10.9
@@ -20,7 +21,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.4.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
