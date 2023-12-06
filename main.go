@@ -28,7 +28,7 @@ func main() {
 
 	repo := postgres.New(cfg_db)
 
-	tehranML, err := ml.New("tehran-20231125.txt", .4, .6)
+	tehranML, err := ml.New("tehran-20231206.txt", .4, .6)
 	if err != nil {
 		log.Fatalf("faild to load tehran ml model: %v", err)
 	}
