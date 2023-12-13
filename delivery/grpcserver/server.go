@@ -61,10 +61,18 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	var eta *param.ETAResponse
 	if req.SourceX > minXTehran && req.SourceY > minYTehran && req.SourceX < maxXTehran && req.SourceY < maxYTehran &&
 		req.DestinationX > minXTehran && req.DestinationY > minYTehran && req.DestinationX < maxXTehran && req.DestinationY < maxYTehran {
-		eta = s.tehranSvc.GetETA(&request)
+		if req.Time < 360 || req.CurrentETA < 500 {
+			eta = &param.ETAResponse{ETA: req.CurrentETA}
+		} else {
+			eta = s.tehranSvc.GetETA(&request)
+		}
 	} else if req.SourceX > minXMashhad && req.SourceY > minYMashhad && req.SourceX < maxXMashhad && req.SourceY < maxYMashhad &&
 		req.DestinationX > minXMashhad && req.DestinationY > minYMashhad && req.DestinationX < maxXMashhad && req.DestinationY < maxYMashhad {
-		eta = s.mashhadSvc.GetETA(&request)
+		if req.Time < 390 || req.CurrentETA < 500 {
+			eta = &param.ETAResponse{ETA: req.CurrentETA}
+		} else {
+			eta = s.mashhadSvc.GetETA(&request)
+		}
 	} else {
 		return &time.TravelResponse{ETA: req.CurrentETA}, nil
 	}
