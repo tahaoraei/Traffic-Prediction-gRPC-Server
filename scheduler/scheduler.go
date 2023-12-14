@@ -11,14 +11,22 @@ import (
 
 var log = logger.Get()
 
+type Config struct {
+	TrafficLengthInterval    int `koanf:"trafficLenInterval"`
+	ModelChangerInterval     int `koanf:"modelChangerInterval"`
+	LoadOnlineConfigInterval int `koanf:"loadOnlineConfig"`
+}
+
 type Scheduler struct {
+	config    Config
 	sch       *gocron.Scheduler
 	tehranML  *ml.ML
 	mashhadML *ml.ML
 }
 
-func New(tehranML *ml.ML, mashhadML *ml.ML) Scheduler {
+func New(config Config, tehranML *ml.ML, mashhadML *ml.ML) Scheduler {
 	return Scheduler{
+		config:    config,
 		sch:       gocron.NewScheduler(time.UTC),
 		tehranML:  tehranML,
 		mashhadML: mashhadML,
@@ -28,17 +36,23 @@ func New(tehranML *ml.ML, mashhadML *ml.ML) Scheduler {
 func (s Scheduler) Start(done <-chan bool, wg *sync.WaitGroup) {
 	wg.Done()
 
-	s.sch.Every(30).Second().Do(func() {
+	s.sch.Every(s.config.TrafficLengthInterval).Second().Do(func() {
 		s.tehranML.SetTrafficLength(1)
 	})
-	s.sch.Every(30).Second().Do(func() {
+	s.sch.Every(s.config.TrafficLengthInterval).Second().Do(func() {
 		s.mashhadML.SetTrafficLength(2)
 	})
-	s.sch.Every(3).Hour().Do(func() {
+	s.sch.Every(s.config.ModelChangerInterval).Hour().Do(func() {
 		s.tehranML.SetNewModel()
 	})
-	s.sch.Every(3).Hour().Do(func() {
+	s.sch.Every(s.config.ModelChangerInterval).Hour().Do(func() {
 		s.mashhadML.SetNewModel()
+	})
+	s.sch.Every(s.config.LoadOnlineConfigInterval).Minute().Do(func() {
+		s.tehranML.SetCoefficentModel("tehran")
+	})
+	s.sch.Every(s.config.LoadOnlineConfigInterval).Minute().Do(func() {
+		s.mashhadML.SetCoefficentModel("mashhad")
 	})
 
 	s.sch.StartAsync()
