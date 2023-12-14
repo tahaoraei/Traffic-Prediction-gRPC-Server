@@ -14,11 +14,11 @@ import (
 var log = logger.Get()
 
 type Config struct {
-	Host   string
-	Port   int
-	User   string
-	Pass   string
-	DBName string
+	Host   string `koanf:"host"`
+	Port   int    `koanf:"port"`
+	User   string `koanf:"user"`
+	Pass   string `koanf:"pass"`
+	DBName string `koanf:"dbname"`
 }
 
 type DB struct {
@@ -53,4 +53,14 @@ func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	}
 	log.Info().Msgf("Traffic length for %s is %d", nowTehran, length)
 	return length, nil
+}
+
+func (db *DB) GetOnlineConfig(city string) (float64, error) {
+	var coef float64
+	if err := db.db.QueryRow(`select coefficient from taha_temp.time_machine_config where city=$1 limit 1;`, city).Scan(&coef); err != nil {
+		log.Warn().Msgf("get model coefficient  from db err is: ", err)
+		return coef, err
+	}
+	log.Info().Msgf("model coefficient is %d", coef)
+	return coef, nil
 }
