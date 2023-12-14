@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"time"
-	_ "time/tzdata"
 	"timeMachine/pkg/logger"
+	"timeMachine/pkg/util"
 
 	_ "github.com/lib/pq"
 )
@@ -46,19 +46,11 @@ func New(config Config) *DB {
 
 func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	var length int32
-	var nowTehran = nowTehran()
+	var nowTehran = util.Now("Asia/Tehran")
 	if err := db.db.QueryRow(`select length::int from traffic.traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
 		log.Warn().Msgf("get traffic length from db err is: ", err)
 		return length, err
 	}
 	log.Info().Msgf("Traffic length for %s is %d", nowTehran, length)
 	return length, nil
-}
-
-func nowTehran() string {
-	loc, err := time.LoadLocation("Asia/Tehran")
-	if err != nil {
-		log.Fatal().Msgf("can't find location timezone ", err)
-	}
-	return time.Now().In(loc).Format("2006-01-02 15:04:05")
 }
