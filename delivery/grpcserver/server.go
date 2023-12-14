@@ -14,36 +14,23 @@ import (
 	"timeMachine/service/timeservice"
 )
 
-const (
-	minXTehran  = 5683551
-	minYTehran  = 4216113
-	maxXTehran  = 5774664
-	maxYTehran  = 4277874
-	minXMashhad = 6583521
-	minYMashhad = 4309213
-	maxXMashhad = 6656388
-	maxYMashhad = 4383510
-)
-
 var log = logger.Get()
 
 type Server struct {
 	time.UnimplementedGetETAServer
-	tehranSvc  *timeservice.Service
-	mashhadSvc *timeservice.Service
+	svc *timeservice.Service
 }
 
 // TODO: change to option pattern
-func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Server {
-	return Server{
+func New(svc *timeservice.Service) *Server {
+	return &Server{
 		UnimplementedGetETAServer: time.UnimplementedGetETAServer{},
-		tehranSvc:                 tehranSvc,
-		mashhadSvc:                mashhadSvc,
+		svc:                       svc,
 	}
 }
 
 // TODO: change Server to pointer
-func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
+func (s *Server) GetETA(c context.Context, req *time.TravelRequest) (*time.TravelResponse, error) {
 	startTime := t.Now()
 	defer metric.ResponseHistogram.WithLabelValues("GetETA").Observe(float64(t.Since(startTime).Milliseconds()))
 
@@ -57,28 +44,11 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 		Time:       req.Time,
 	}
 
-	// TODO: move this logic to business layer
 	var eta *param.ETAResponse
-	if req.SourceX > minXTehran && req.SourceY > minYTehran && req.SourceX < maxXTehran && req.SourceY < maxYTehran &&
-		req.DestinationX > minXTehran && req.DestinationY > minYTehran && req.DestinationX < maxXTehran && req.DestinationY < maxYTehran {
-		if req.Time < 360 || req.CurrentETA < 500 {
-			eta = &param.ETAResponse{ETA: req.CurrentETA}
-		} else {
-			eta = s.tehranSvc.GetETA(&request)
-		}
-	} else if req.SourceX > minXMashhad && req.SourceY > minYMashhad && req.SourceX < maxXMashhad && req.SourceY < maxYMashhad &&
-		req.DestinationX > minXMashhad && req.DestinationY > minYMashhad && req.DestinationX < maxXMashhad && req.DestinationY < maxYMashhad {
-		if req.Time < 390 || req.CurrentETA < 500 {
-			eta = &param.ETAResponse{ETA: req.CurrentETA}
-		} else {
-			eta = s.mashhadSvc.GetETA(&request)
-		}
-	} else {
-		return &time.TravelResponse{ETA: req.CurrentETA}, nil
-	}
 
+	eta = s.svc.GetETA(&request)
 	if eta == nil {
-		log.Warn().Msgf("cant predict eta and ml didn't response")
+		log.Warn().Msgf("cant predict eta and svc didn't response")
 		return &time.TravelResponse{ETA: req.CurrentETA}, fmt.Errorf("cant predict eta")
 	}
 
@@ -86,7 +56,7 @@ func (s Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Travel
 	return &resp, nil
 }
 
-func (s Server) Start() {
+func (s *Server) Start() {
 	address := fmt.Sprintf(":%d", 9090)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -95,7 +65,7 @@ func (s Server) Start() {
 		panic(err)
 	}
 
-	timeServer := Server{tehranSvc: s.tehranSvc, mashhadSvc: s.mashhadSvc}
+	timeServer := Server{svc: s.svc}
 	grpcServer := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
 		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
