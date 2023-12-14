@@ -28,22 +28,22 @@ func main() {
 
 	repo := postgres.New(cfg_db)
 
-	tehranML, err := ml.New("tehran-20231206.txt", .4, .6)
+	tehranML, err := ml.New(repo, "tehran", 1, .4, .6)
 	if err != nil {
 		log.Fatalf("faild to load tehran ml model: %v", err)
 	}
-	tehranSvc := timeservice.New(repo, tehranML, 1)
 
-	mashhadML, err := ml.New("mashhad-20231125.txt", .3, .7)
+	mashhadML, err := ml.New(repo, "mashhad", 2, .3, .7)
 	if err != nil {
 		log.Fatalf("faild to load mashhad ml model: %v", err)
 	}
-	mashhadSvc := timeservice.New(repo, mashhadML, 2)
+
+	svc := timeservice.New(tehranML, mashhadML)
 
 	var wg sync.WaitGroup
 	done := make(chan bool)
 	go func() {
-		cronTehran := scheduler.New(&tehranSvc, &mashhadSvc)
+		cronTehran := scheduler.New(tehranML, mashhadML)
 		wg.Add(1)
 		cronTehran.Start(done, &wg)
 	}()
@@ -53,7 +53,7 @@ func main() {
 		server.Serve()
 	}()
 
-	grpc := grpcserver.New(&tehranSvc, &mashhadSvc)
+	grpc := grpcserver.New(&svc)
 	grpc.Start()
 
 	done <- true
