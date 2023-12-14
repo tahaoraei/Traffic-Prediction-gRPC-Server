@@ -1,59 +1,32 @@
 package timeservice
 
 import (
-	"github.com/rs/zerolog/log"
-	"sync"
-	"traffic-prediction-grpc-server/param"
+	"fmt"
+	"github.com/dmitryikh/leaves"
+	"timeMachine/param"
 )
 
-type Repository interface {
-	GetTrafficLength(zone int8) (int32, error)
-}
-
-type ML interface {
-	GetETAFromML(req *param.ETARequest) *param.ETAResponse
-}
-
 type Service struct {
-	repo          Repository
-	ml            ML
-	trafficLength int32
-	zone          int8
+	modelName string
+	model     *leaves.Ensemble
 }
 
-func New(repo Repository, ml ML, zone int8) Service {
-	return Service{repo: repo, ml: ml, zone: zone}
+func New(modelName string) Service {
+	model, err := leaves.LGEnsembleFromFile(modelName, true)
+	if err != nil {
+		panic(err)
+	}
+	if model == nil {
+		fmt.Println("model is nil")
+	} else {
+		fmt.Println(model.Name())
+	}
+	return Service{modelName: modelName, model: model}
 }
 
-func (s *Service) SetTrafficLength(zone int8) error {
-	l, e := s.repo.GetTrafficLength(zone)
-	if e != nil {
-		log.Warn().Msgf("error in getting traffic length: %s", e.Error())
-		return e
-	}
-	s.trafficLength = l
-	return nil
-}
-
-func (s *Service) GetETA(req *param.ETARequest) *param.ETAResponse {
-	req.TrafficLength = s.trafficLength
-
-	var eta *param.ETAResponse
-	var wg sync.WaitGroup
-
-	processRequest := func() {
-		defer wg.Done()
-		eta = s.ml.GetETAFromML(req)
-	}
-
-	wg.Add(1)
-	go processRequest()
-
-	wg.Wait()
-
-	if eta == nil {
-		log.Info().Msgf("%v can't predict eta for this request or eta<500", req)
-	}
-
-	return eta
+func (s *Service) GetETA(req param.ETARequest) param.ETAResponse {
+	feature := []float64{float64(req.Distance), float64(req.CurrentETA), float64(req.StraightETA), float64(req.Sx), float64(req.Sy), float64(req.Dx), float64(req.Dy), float64(req.Time)}
+	eta := s.model.PredictSingle(feature, 0)
+	fmt.Println("eta from GetETA service", eta)
+	return param.ETAResponse{ETA: int32(eta)}
 }
