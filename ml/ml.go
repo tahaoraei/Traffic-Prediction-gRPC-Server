@@ -21,6 +21,7 @@ var log = logger.Get()
 
 type Repository interface {
 	GetTrafficLength(zone int8) (int32, error)
+	GetOnlineConfig(city string) (float64, error)
 }
 
 type ML struct {
@@ -28,13 +29,12 @@ type ML struct {
 	modelCity     string
 	model         *leaves.Ensemble
 	coefModel     float64
-	coefEngine    float64
 	trafficLength int32
 	zone          int8
 }
 
-func New(repo Repository, modelCity string, zone int8, coefModel float64, coefEngine float64) (*ML, error) {
-	m := ML{repo: repo, modelCity: modelCity, zone: zone, model: nil, coefModel: coefModel, coefEngine: coefEngine}
+func New(repo Repository, modelCity string, zone int8, coefModel float64) (*ML, error) {
+	m := ML{repo: repo, modelCity: modelCity, zone: zone, model: nil, coefModel: coefModel}
 	err := m.SetNewModel()
 	if err != nil {
 		return nil, err
@@ -91,6 +91,16 @@ func (ml *ML) SetNewModel() error {
 	return nil
 }
 
+func (ml *ML) SetCoefficentModel(city string) error {
+	coef, err := ml.repo.GetOnlineConfig(city)
+	if err != nil {
+		log.Warn().Msgf("can't get online config")
+		return err
+	}
+	ml.coefModel = coef
+	return nil
+}
+
 func (ml *ML) GetETAFromML(req *param.ETARequest) *param.ETAResponse {
 	req.TrafficLength = ml.trafficLength
 
@@ -110,6 +120,6 @@ func (ml *ML) GetETAFromML(req *param.ETARequest) *param.ETAResponse {
 	if eta < 500 {
 		return nil
 	}
-	// TODO: add online config for coefficients
-	return &param.ETAResponse{ETA: int32(eta*ml.coefModel + etaEngine*ml.coefEngine)}
+
+	return &param.ETAResponse{ETA: int32(eta*ml.coefModel + etaEngine*(1.-ml.coefModel))}
 }
