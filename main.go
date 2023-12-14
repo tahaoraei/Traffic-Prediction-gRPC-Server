@@ -1,20 +1,51 @@
 package main
 
 import (
+	"log"
+	"sync"
 	"timeMachine/delivery/grpcserver"
 	"timeMachine/delivery/httpserver"
+	"timeMachine/ml"
+	"timeMachine/pkg/config"
+	"timeMachine/repository/postgres"
+	"timeMachine/scheduler"
 	"timeMachine/service/timeservice"
 )
 
 func main() {
-	cfg := httpserver.Config{Port: 8080}
-	timeSvc := timeservice.New("timemachine-lightgbm-20231118.txt")
+	// TODO: main should be write in 3 line :)
+	cfg := config.Load("config.yml")
 
-	grpc := grpcserver.New(&timeSvc)
+	repo := postgres.New(cfg.Postgres)
+
+	tehranML, err := ml.New(repo, "tehran", 1, .4)
+	if err != nil {
+		log.Fatalf("faild to load tehran ml model: %v", err)
+	}
+
+	mashhadML, err := ml.New(repo, "mashhad", 2, .3)
+	if err != nil {
+		log.Fatalf("faild to load mashhad ml model: %v", err)
+	}
+
+	svc := timeservice.New(tehranML, mashhadML)
+
+	var wg sync.WaitGroup
+	done := make(chan bool)
 	go func() {
-		grpc.Start()
+		cron := scheduler.New(cfg.Scheduler, tehranML, mashhadML)
+		wg.Add(1)
+		cron.Start(done, &wg)
 	}()
 
-	server := httpserver.New(cfg, timeSvc)
-	server.Serve()
+	go func() {
+		server := httpserver.New(cfg.HTTPServer)
+		server.Serve()
+	}()
+
+	grpc := grpcserver.New(cfg.GRPCServer, &svc)
+	grpc.Start()
+
+	done <- true
+	wg.Wait()
 }

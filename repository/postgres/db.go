@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"time"
-	_ "time/tzdata"
-	"traffic-prediction-grpc-server/pkg/logger"
+	"timeMachine/pkg/logger"
+	"timeMachine/pkg/util"
 
 	_ "github.com/lib/pq"
 )
@@ -14,11 +14,11 @@ import (
 var log = logger.Get()
 
 type Config struct {
-	Host   string
-	Port   int
-	User   string
-	Pass   string
-	DBName string
+	Host   string `koanf:"host"`
+	Port   int    `koanf:"port"`
+	User   string `koanf:"user"`
+	Pass   string `koanf:"pass"`
+	DBName string `koanf:"dbname"`
 }
 
 type DB struct {
@@ -28,7 +28,7 @@ type DB struct {
 
 func New(config Config) *DB {
 	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, os.Getenv("DBUSER"), os.Getenv("DBPASS"), config.DBName))
+		config.Host, config.Port, os.Getenv("SECRETS_DBUSER"), os.Getenv("SECRETS_DBPASS"), config.DBName))
 	if err != nil {
 		log.Fatal().Msgf("can't connect to db %s", err)
 		panic(err)
@@ -46,8 +46,8 @@ func New(config Config) *DB {
 
 func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	var length int32
-	var nowTehran = nowTehran()
-	if err := db.db.QueryRow(`select length::int from traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
+	var nowTehran = util.Now("Asia/Tehran")
+	if err := db.db.QueryRow(`select length::int from traffic.traffic_length where date_time>$1::timestamp at time zone 'asia/tehran'-interval'20min' and zone_id=$2 order by date_time desc limit 1;`, nowTehran, zone).Scan(&length); err != nil {
 		log.Warn().Msgf("get traffic length from db err is: ", err)
 		return length, err
 	}
@@ -55,10 +55,12 @@ func (db *DB) GetTrafficLength(zone int8) (int32, error) {
 	return length, nil
 }
 
-func nowTehran() string {
-	loc, err := time.LoadLocation("Asia/Tehran")
-	if err != nil {
-		log.Fatal().Msgf("can't find location timezone ", err)
+func (db *DB) GetOnlineConfig(city string) (float64, error) {
+	var coef float64
+	if err := db.db.QueryRow(`select coefficient from taha_temp.time_machine_config where city=$1 limit 1;`, city).Scan(&coef); err != nil {
+		log.Warn().Msgf("get model coefficient  from db err is: ", err)
+		return coef, err
 	}
-	return time.Now().In(loc).Format("2006-01-02 15:04:05")
+	log.Info().Msgf("model coefficient is %d", coef)
+	return coef, nil
 }

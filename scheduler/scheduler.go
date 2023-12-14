@@ -4,28 +4,57 @@ import (
 	"github.com/go-co-op/gocron"
 	"sync"
 	"time"
-	"traffic-prediction-grpc-server/service/timeservice"
+	_ "time/tzdata"
+	"timeMachine/ml"
+	"timeMachine/pkg/logger"
 )
 
-type Scheduler struct {
-	sch        *gocron.Scheduler
-	tehranSvc  *timeservice.Service
-	mashhadSvc *timeservice.Service
+var log = logger.Get()
+
+type Config struct {
+	TrafficLengthInterval    int `koanf:"trafficLenInterval"`
+	ModelChangerInterval     int `koanf:"modelChangerInterval"`
+	LoadOnlineConfigInterval int `koanf:"loadOnlineConfig"`
 }
 
-func New(tehranSvc *timeservice.Service, mashhadSvc *timeservice.Service) Scheduler {
+type Scheduler struct {
+	config    Config
+	sch       *gocron.Scheduler
+	tehranML  *ml.ML
+	mashhadML *ml.ML
+}
+
+func New(config Config, tehranML *ml.ML, mashhadML *ml.ML) Scheduler {
 	return Scheduler{
-		sch:        gocron.NewScheduler(time.UTC),
-		tehranSvc:  tehranSvc,
-		mashhadSvc: mashhadSvc,
+		config:    config,
+		sch:       gocron.NewScheduler(time.UTC),
+		tehranML:  tehranML,
+		mashhadML: mashhadML,
 	}
 }
 
 func (s Scheduler) Start(done <-chan bool, wg *sync.WaitGroup) {
 	wg.Done()
 
-	s.sch.Every(30).Second().Do(s.tehranSvc.SetTrafficLength(1))
-	s.sch.Every(30).Second().Do(s.mashhadSvc.SetTrafficLength(2))
+	s.sch.Every(s.config.TrafficLengthInterval).Second().Do(func() {
+		s.tehranML.SetTrafficLength(1)
+	})
+	s.sch.Every(s.config.TrafficLengthInterval).Second().Do(func() {
+		s.mashhadML.SetTrafficLength(2)
+	})
+	s.sch.Every(s.config.ModelChangerInterval).Hour().Do(func() {
+		s.tehranML.SetNewModel()
+	})
+	s.sch.Every(s.config.ModelChangerInterval).Hour().Do(func() {
+		s.mashhadML.SetNewModel()
+	})
+	s.sch.Every(s.config.LoadOnlineConfigInterval).Minute().Do(func() {
+		s.tehranML.SetCoefficentModel("tehran")
+	})
+	s.sch.Every(s.config.LoadOnlineConfigInterval).Minute().Do(func() {
+		s.mashhadML.SetCoefficentModel("mashhad")
+	})
+
 	s.sch.StartAsync()
 
 	<-done

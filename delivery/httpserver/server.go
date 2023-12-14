@@ -2,38 +2,44 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"timeMachine/pkg/logger"
-	"timeMachine/service/timeservice"
+	"timeMachine/pkg/metric"
 )
 
+var log = logger.Get()
+
 type Config struct {
-	Port int
+	Port int `koanf:"port"`
 }
 
 type Server struct {
-	config  Config
-	timeSvc timeservice.Service
-	Router  *echo.Echo
+	config Config
+	Router *echo.Echo
 }
 
-func New(config Config, timeSvc timeservice.Service) Server {
+func New(config Config) Server {
 	return Server{
-		config:  config,
-		timeSvc: timeSvc,
-		Router:  echo.New(),
+		config: config,
+		Router: echo.New(),
 	}
 }
 
 func (s Server) Serve() {
-	log := logger.Get()
+	if err := prometheus.Register(metric.ResponseHistogram); err != nil {
+		log.Fatal().Msgf("can't register prometheus metric: ", err)
+	}
+
 	s.Router.Use(middleware.Recover())
 	s.Router.Use(middleware.Logger())
 
 	s.Router.GET("/health/live", s.health)
 	s.Router.GET("/health/ready", s.health)
+	s.Router.GET("/actuator/prometheus", echoprometheus.NewHandler())
 
 	// Start server
 	address := fmt.Sprintf(":%d", s.config.Port)

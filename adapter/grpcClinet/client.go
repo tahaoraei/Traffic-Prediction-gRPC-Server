@@ -27,14 +27,13 @@ func (c Client) GetNewETA(ctx context.Context, request param.ETARequest) (param.
 	client := time.NewGetETAClient(conn)
 
 	travelRequest := time.TravelRequest{
-		CurrentETA:  request.CurrentETA,
-		StraightETA: request.StraightETA,
-		Distance:    request.Distance,
-		Sx:          request.Sx,
-		Sy:          request.Sy,
-		Dx:          request.Dx,
-		Dy:          request.Dy,
-		Time:        request.Time,
+		CurrentETA: request.CurrentETA,
+		Distance:   request.Distance,
+		Sx:         request.Sx,
+		Sy:         request.Sy,
+		Dx:         request.Dx,
+		Dy:         request.Dy,
+		Time:       request.Time,
 	}
 
 	resp, err := client.GetETA(ctx, &travelRequest)
