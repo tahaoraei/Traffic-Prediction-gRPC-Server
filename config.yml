@@ -1,0 +1,18 @@
+---
+type: yml
+
+httpserver:
+  port: 7182
+
+postgres:
+  host: localhost
+  port: 5435
+  dbname: traffic
+
+scheduler:
+  trafficLenInterval: 30 #second
+  modelChangerInterval: 3 #hour
+  loadOnlineConfig: 1 #min
+
+grpcserver:
+  port: 9090
