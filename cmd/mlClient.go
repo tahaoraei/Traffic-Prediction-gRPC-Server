@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"timeMachine/delivery/httpserver"
 	"timeMachine/ml"
 	"timeMachine/param"
+	"timeMachine/pkg/config"
 	"timeMachine/pkg/logger"
 	"timeMachine/repository/postgres"
 	"timeMachine/scheduler"
@@ -16,26 +16,17 @@ import (
 var log = logger.Get()
 
 func main() {
-	cfg_httpserver := httpserver.Config{
-		Port: 7182,
-	}
+	cfg := config.Load("config.yml")
+	fmt.Printf("%+v", cfg)
 
-	cfg_db := postgres.Config{
-		Host:   "localhost",
-		Port:   5435,
-		User:   os.Getenv("SECRETS_DBUSER"),
-		Pass:   os.Getenv("SECRETS_DBPASS"),
-		DBName: "traffic",
-	}
+	repo := postgres.New(cfg.Postgres)
 
-	repo := postgres.New(cfg_db)
-
-	tehranML, err := ml.New(repo, "tehran", 1, .4, .6)
+	tehranML, err := ml.New(repo, "tehran", 1, .4)
 	if err != nil {
 		log.Fatal().Msgf("faild to load tehran ml model: %v", err)
 	}
 
-	mashhadML, err := ml.New(repo, "mashhad", 2, .3, .7)
+	mashhadML, err := ml.New(repo, "mashhad", 2, .3)
 	if err != nil {
 		log.Fatal().Msgf("faild to load mashhad ml model: %v", err)
 	}
@@ -43,7 +34,7 @@ func main() {
 	var wg sync.WaitGroup
 	done := make(chan bool)
 	go func() {
-		cronTehran := scheduler.New(tehranML, mashhadML)
+		cronTehran := scheduler.New(cfg.Scheduler, tehranML, mashhadML)
 		wg.Add(1)
 		cronTehran.Start(done, &wg)
 		fmt.Println("end of scheduler")
@@ -62,7 +53,7 @@ func main() {
 	})
 	log.Info().Msgf("%+v", resp)
 
-	server := httpserver.New(cfg_httpserver)
+	server := httpserver.New(cfg.HTTPServer)
 	server.Serve()
 	fmt.Println("end of httpserver")
 

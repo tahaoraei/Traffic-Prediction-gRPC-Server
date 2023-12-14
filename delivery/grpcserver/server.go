@@ -16,14 +16,20 @@ import (
 
 var log = logger.Get()
 
+type Config struct {
+	Port int `koanf:"port"`
+}
+
 type Server struct {
+	config Config
 	time.UnimplementedGetETAServer
 	svc *timeservice.Service
 }
 
 // TODO: change to option pattern
-func New(svc *timeservice.Service) *Server {
+func New(config Config, svc *timeservice.Service) *Server {
 	return &Server{
+		config:                    config,
 		UnimplementedGetETAServer: time.UnimplementedGetETAServer{},
 		svc:                       svc,
 	}
@@ -57,7 +63,7 @@ func (s *Server) GetETA(c context.Context, req *time.TravelRequest) (*time.Trave
 }
 
 func (s *Server) Start() {
-	address := fmt.Sprintf(":%d", 9090)
+	address := fmt.Sprintf(":%d", s.config.Port)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatal().Msgf("grpc listener problem: ", err)

@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	"os"
 	"sync"
 	"timeMachine/delivery/grpcserver"
 	"timeMachine/delivery/httpserver"
 	"timeMachine/ml"
+	"timeMachine/pkg/config"
 	"timeMachine/repository/postgres"
 	"timeMachine/scheduler"
 	"timeMachine/service/timeservice"
@@ -14,26 +14,16 @@ import (
 
 func main() {
 	// TODO: main should be write in 3 line :)
-	cfg_httpserver := httpserver.Config{
-		Port: 7182,
-	}
+	cfg := config.Load("config.yml")
 
-	cfg_db := postgres.Config{
-		Host:   "172.20.11.137",
-		Port:   5432,
-		User:   os.Getenv("SECRETS_DBUSER"),
-		Pass:   os.Getenv("SECRETS_DBPASS"),
-		DBName: "traffic",
-	}
+	repo := postgres.New(cfg.Postgres)
 
-	repo := postgres.New(cfg_db)
-
-	tehranML, err := ml.New(repo, "tehran", 1, .4, .6)
+	tehranML, err := ml.New(repo, "tehran", 1, .4)
 	if err != nil {
 		log.Fatalf("faild to load tehran ml model: %v", err)
 	}
 
-	mashhadML, err := ml.New(repo, "mashhad", 2, .3, .7)
+	mashhadML, err := ml.New(repo, "mashhad", 2, .3)
 	if err != nil {
 		log.Fatalf("faild to load mashhad ml model: %v", err)
 	}
@@ -43,17 +33,17 @@ func main() {
 	var wg sync.WaitGroup
 	done := make(chan bool)
 	go func() {
-		cronTehran := scheduler.New(tehranML, mashhadML)
+		cron := scheduler.New(cfg.Scheduler, tehranML, mashhadML)
 		wg.Add(1)
-		cronTehran.Start(done, &wg)
+		cron.Start(done, &wg)
 	}()
 
 	go func() {
-		server := httpserver.New(cfg_httpserver)
+		server := httpserver.New(cfg.HTTPServer)
 		server.Serve()
 	}()
 
-	grpc := grpcserver.New(&svc)
+	grpc := grpcserver.New(cfg.GRPCServer, &svc)
 	grpc.Start()
 
 	done <- true

@@ -14,7 +14,7 @@ import (
 var log = logger.Get()
 
 type Config struct {
-	Port int
+	Port int `koanf:"port"`
 }
 
 type Server struct {
